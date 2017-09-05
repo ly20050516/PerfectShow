@@ -15,7 +15,7 @@ namespace venus {
 	* @param[in]  src    The input image.
 	* @param[in]  radius Blur radius.
 	*/
-void gaussianBlur(cv::Mat& dst, const cv::Mat& src, float radius);
+    void gaussianBlur(cv::Mat &dst, const cv::Mat &src, float radius);
 
 
 /**
@@ -29,11 +29,14 @@ void gaussianBlur(cv::Mat& dst, const cv::Mat& src, float radius);
  * @param[in]  radius     Gaussian kernel radius, or bluring radius.
  * @param[in]  tolerance  Range [0, 255], pixels within tolerance will be handled.
  */
-void gaussianBlurSelective(cv::Mat& dst, const cv::Mat& src, const cv::Mat& mask, float radius, float tolerance);
+    void gaussianBlurSelective(cv::Mat &dst, const cv::Mat &src, const cv::Mat &mask, float radius,
+                               float tolerance);
 
-void radialBlur(cv::Mat& dst, const cv::Mat& src, cv::Point2f& center, float inner_radius, float outer_radius);
-void bilinearBlur(cv::Mat& dst, const cv::Mat& src, cv::Point2f& point0, cv::Point2f& point1, float band_width);
+    void radialBlur(cv::Mat &dst, const cv::Mat &src, cv::Point2f &center, float inner_radius,
+                    float outer_radius);
 
+    void bilinearBlur(cv::Mat &dst, const cv::Mat &src, cv::Point2f &point0, cv::Point2f &point1,
+                      float band_width);
 
 
 } /* namespace venus */

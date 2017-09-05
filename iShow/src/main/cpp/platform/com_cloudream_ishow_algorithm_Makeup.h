@@ -13,7 +13,7 @@ extern "C" {
  * Signature: (Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;[Landroid/graphics/PointF;Landroid/graphics/Bitmap;IF)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Makeup_nativeApplyBrow
-  (JNIEnv *, jclass, jobject, jobject, jobjectArray, jobject, jint, jfloat);
+        (JNIEnv *, jclass, jobject, jobject, jobjectArray, jobject, jint, jfloat);
 
 /*
  * Class:     com_cloudream_ishow_algorithm_Makeup
@@ -21,7 +21,7 @@ JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Makeup_nativeApplyBrow
  * Signature: (Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;[Landroid/graphics/PointF;Landroid/graphics/Bitmap;F)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Makeup_nativeApplyEye
-  (JNIEnv *, jclass, jobject, jobject, jobjectArray, jobject, jfloat);
+        (JNIEnv *, jclass, jobject, jobject, jobjectArray, jobject, jfloat);
 
 /*
  * Class:     com_cloudream_ishow_algorithm_Makeup
@@ -29,7 +29,7 @@ JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Makeup_nativeApplyEye
  * Signature: (Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;[Landroid/graphics/PointF;Landroid/graphics/Bitmap;IF)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Makeup_nativeApplyEyeLash
-  (JNIEnv *, jclass, jobject, jobject, jobjectArray, jobject, jint, jfloat);
+        (JNIEnv *, jclass, jobject, jobject, jobjectArray, jobject, jint, jfloat);
 
 /*
  * Class:     com_cloudream_ishow_algorithm_Makeup
@@ -37,7 +37,7 @@ JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Makeup_nativeApplyEyeL
  * Signature: (Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;[Landroid/graphics/PointF;[Landroid/graphics/Bitmap;[IF)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Makeup_nativeApplyEyeShadow
-  (JNIEnv *, jclass, jobject, jobject, jobjectArray, jobjectArray, jintArray, jfloat);
+        (JNIEnv *, jclass, jobject, jobject, jobjectArray, jobjectArray, jintArray, jfloat);
 
 /*
  * Class:     com_cloudream_ishow_algorithm_Makeup
@@ -45,7 +45,7 @@ JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Makeup_nativeApplyEyeS
  * Signature: (Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;[Landroid/graphics/PointF;Landroid/graphics/Bitmap;F)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Makeup_nativeApplyIris
-  (JNIEnv *, jclass, jobject, jobject, jobjectArray, jobject, jfloat);
+        (JNIEnv *, jclass, jobject, jobject, jobjectArray, jobject, jfloat);
 
 /*
  * Class:     com_cloudream_ishow_algorithm_Makeup
@@ -53,7 +53,7 @@ JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Makeup_nativeApplyIris
  * Signature: (Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;[Landroid/graphics/PointF;IIF)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Makeup_nativeApplyBlush
-  (JNIEnv *, jclass, jobject, jobject, jobjectArray, jint, jint, jfloat);
+        (JNIEnv *, jclass, jobject, jobject, jobjectArray, jint, jint, jfloat);
 
 /*
  * Class:     com_cloudream_ishow_algorithm_Makeup
@@ -61,7 +61,7 @@ JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Makeup_nativeApplyBlus
  * Signature: (Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;[Landroid/graphics/PointF;IF)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Makeup_nativeApplyLip
-  (JNIEnv *, jclass, jobject, jobject, jobjectArray, jint, jfloat);
+        (JNIEnv *, jclass, jobject, jobject, jobjectArray, jint, jfloat);
 
 #ifdef __cplusplus
 }

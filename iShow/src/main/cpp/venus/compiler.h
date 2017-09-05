@@ -24,15 +24,20 @@ namespace venus {
  * @see C++11 feature about user literial, http://en.cppreference.com/w/cpp/language/user_literal
  * note that float or double type are not allowed on literal operators
  */
-constexpr long double operator "" _deg(long double degree)
-{
-	return degree * static_cast<long double>(M_PI)/180;
-}
+    constexpr long double operator
+    ""
 
-constexpr long double operator "" _deg(unsigned long long int degree)
-{
-	return degree * static_cast<long double>(M_PI)/180;
-}
+    _deg(long double degree) {
+        return degree * static_cast<long double>(M_PI) / 180;
+    }
+
+    constexpr long double operator
+    ""
+
+    _deg(unsigned long long int degree) {
+        return degree * static_cast<long double>(M_PI) / 180;
+    }
+
 #endif
 
 

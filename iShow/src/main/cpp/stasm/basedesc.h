@@ -29,27 +29,26 @@
 #ifndef STASM_BASEDESC_H
 #define STASM_BASEDESC_H
 
-namespace stasm
-{
-class BaseDescMod // abstract base class for all descriptor models
-{
-public:
-    virtual void DescSearch_( // search in area around the current point
-        double&      x,       // io: (in: old posn of landmark, out: new posn)
-        double&      y,       // io
-        const Image& img,     // in: image scaled to this pyramid level
-        const Shape& shape,   // in: current position of the landmarks
-        int          ilev,    // in: pyramid level (0 is full size)
-        int          ipoint)  // in: index of the current landmark
-    const = 0;
+namespace stasm {
+    class BaseDescMod // abstract base class for all descriptor models
+    {
+    public:
+        virtual void DescSearch_( // search in area around the current point
+                double &x,       // io: (in: old posn of landmark, out: new posn)
+                double &y,       // io
+                const Image &img,     // in: image scaled to this pyramid level
+                const Shape &shape,   // in: current position of the landmarks
+                int ilev,    // in: pyramid level (0 is full size)
+                int ipoint)  // in: index of the current landmark
+        const = 0;
 
-    virtual ~BaseDescMod() {} // destructor
-};
+        virtual ~BaseDescMod() {} // destructor
+    };
 
 // vec_vec_BaseDescMod contains the descriptor models, one pointer
 // for each landmark at each pyramid level, index as [ilev][ipoint]
 
-typedef vector<vector<const BaseDescMod*> > vec_vec_BaseDescMod;
+    typedef vector <vector<const BaseDescMod *>> vec_vec_BaseDescMod;
 
 } // namespace stasm
 #endif // STASM_BASEDESC_H

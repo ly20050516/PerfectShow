@@ -5,18 +5,18 @@
 #ifndef STASM_H
 #define STASM_H
 
-static const char* const STASM_VERSION = "4.1.0"
+static const char *const STASM_VERSION = "4.1.0"
 #if MOD_3                     // experimental versions
-            "_MOD_3";
+        "_MOD_3";
 #elif MOD_A1
-            "_MOD_A1";
+        "_MOD_A1";
 #elif MOD_A
-            "_MOD_A";
+        "_MOD_A";
 #elif MOD_A_EMU
-            "_MOD_A_EMU";
+        "_MOD_A_EMU";
 #else
-            "";               // released version of Stasm
-   #define MOD_1 1
+        "";               // released version of Stasm
+#define MOD_1 1
 #endif
 
 #define TRACE_IMAGES 0        // 1 to generate debugging images
@@ -51,6 +51,7 @@ static const char* const STASM_VERSION = "4.1.0"
 #include <string>
 #include <functional>
 #include <algorithm>
+
 #if _OPENMP
 #include <omp.h>
 #endif
@@ -72,22 +73,24 @@ static const char* const STASM_VERSION = "4.1.0"
 #include "asm.h"
 
 #if MOD_1   // released version of Stasm
-    #include "../stasm/MOD_1/facedet.h"
-    #include "../stasm/MOD_1/initasm.h"
+
+#include "../stasm/MOD_1/facedet.h"
+#include "../stasm/MOD_1/initasm.h"
+
 #elif MOD_3 // experimental versions
-    #include "../stasm/MOD_3/facedet.h"
-    #include "../stasm/MOD_3/initasm.h"
+#include "../stasm/MOD_3/facedet.h"
+#include "../stasm/MOD_3/initasm.h"
 #elif MOD_A1
-    #include "../stasm/MOD_A1/facedet.h"
-    #include "../stasm/MOD_A1/initasm.h"
+#include "../stasm/MOD_A1/facedet.h"
+#include "../stasm/MOD_A1/initasm.h"
 #elif MOD_A
-    #include "../stasm/MOD_A/facedet.h"
-    #include "../stasm/MOD_A/initasm.h"
+#include "../stasm/MOD_A/facedet.h"
+#include "../stasm/MOD_A/initasm.h"
 #elif MOD_A_EMU
-    #include "../stasm/MOD_A/facedet.h"
-    #include "../stasm/MOD_A/initasm.h"
+#include "../stasm/MOD_A/facedet.h"
+#include "../stasm/MOD_A/initasm.h"
 #else
-    error illegal MOD
+error illegal MOD
 #endif
 
 #include "eyedet.h"

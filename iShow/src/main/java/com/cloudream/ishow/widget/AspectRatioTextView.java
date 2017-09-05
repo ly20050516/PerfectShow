@@ -16,93 +16,81 @@ import android.widget.TextView;
 import com.cloudream.ishow.R;
 import com.cloudream.ishow.bean.AspectRatio;
 
-public class AspectRatioTextView extends TextView
-{
-	private final Rect  mBounds = new Rect();
-	private final Paint mDotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-	private float mDotSize;
+public class AspectRatioTextView extends TextView {
+    private final Rect mBounds = new Rect();
+    private final Paint mDotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private float mDotSize;
 
-	private AspectRatio mAspectRatio;
+    private AspectRatio mAspectRatio;
 
-	public AspectRatioTextView(Context context)
-	{
-		this(context, null);
-	}
-	
-	public AspectRatioTextView(Context context, AttributeSet attrs)
-	{
-		this(context, attrs, R.style.Widget_AspectRatioTextView);
-	}
+    public AspectRatioTextView(Context context) {
+        this(context, null);
+    }
 
-	public AspectRatioTextView(Context context, AttributeSet attrs, int defStyleAttr)
-	{
-		super(context, attrs, defStyleAttr);
-		init(context, attrs);
-	}
+    public AspectRatioTextView(Context context, AttributeSet attrs) {
+        this(context, attrs, R.style.Widget_AspectRatioTextView);
+    }
 
-	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-	public AspectRatioTextView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes)
-	{
-		super(context, attrs, defStyleAttr, defStyleRes);
-		init(context, attrs);
-	}
+    public AspectRatioTextView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init(context, attrs);
+    }
 
-	public void setAspectRatio(@NonNull AspectRatio aspectRatio)
-	{
-		mAspectRatio = aspectRatio;
-		setTitle();
-	}
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public AspectRatioTextView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+        init(context, attrs);
+    }
 
-	public float getAspectRatio(boolean toggleRatio)
-	{
-		if(toggleRatio)
-		{
-			mAspectRatio.switchOrientation();
-			setTitle();
-		}
-		return mAspectRatio.getAspectRatio();
-	}
+    public void setAspectRatio(@NonNull AspectRatio aspectRatio) {
+        mAspectRatio = aspectRatio;
+        setTitle();
+    }
 
-	@Override
-	protected void onDraw(Canvas canvas)
-	{
-		if(isSelected())
-		{
-			canvas.getClipBounds(mBounds);
-			canvas.drawCircle((mBounds.right - mBounds.left) / 2.0F,
-					mBounds.bottom - mDotSize, mDotSize / 2, mDotPaint);
-		}
-	}
+    public float getAspectRatio(boolean toggleRatio) {
+        if (toggleRatio) {
+            mAspectRatio.switchOrientation();
+            setTitle();
+        }
+        return mAspectRatio.getAspectRatio();
+    }
 
-	private void init(Context context, AttributeSet attrs)
-	{
-		setGravity(Gravity.CENTER_HORIZONTAL);
-		
-		TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.AspectRatioTextView);
-		String title = a.getString(R.styleable.AspectRatioTextView_android_text);
-		int aspectRatioX = a.getInt(R.styleable.AspectRatioTextView_aspectRatioX, AspectRatio.DEFAULT_ASPECT_RATIO);
-		int aspectRatioY = a.getInt(R.styleable.AspectRatioTextView_aspectRatioY, AspectRatio.DEFAULT_ASPECT_RATIO);
-		a.recycle();
-		
-		mAspectRatio = new AspectRatio(title, aspectRatioX, aspectRatioY);
-		
-		Resources res = context.getResources();
-		mDotSize = res.getDimension(R.dimen.AspectRatioTextView_dotSize);
-		mDotPaint.setStyle(Paint.Style.FILL);
+    @Override
+    protected void onDraw(Canvas canvas) {
+        if (isSelected()) {
+            canvas.getClipBounds(mBounds);
+            canvas.drawCircle((mBounds.right - mBounds.left) / 2.0F,
+                    mBounds.bottom - mDotSize, mDotSize / 2, mDotPaint);
+        }
+    }
 
-		setTitle();
+    private void init(Context context, AttributeSet attrs) {
+        setGravity(Gravity.CENTER_HORIZONTAL);
+
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.AspectRatioTextView);
+        String title = a.getString(R.styleable.AspectRatioTextView_android_text);
+        int aspectRatioX = a.getInt(R.styleable.AspectRatioTextView_aspectRatioX, AspectRatio.DEFAULT_ASPECT_RATIO);
+        int aspectRatioY = a.getInt(R.styleable.AspectRatioTextView_aspectRatioY, AspectRatio.DEFAULT_ASPECT_RATIO);
+        a.recycle();
+
+        mAspectRatio = new AspectRatio(title, aspectRatioX, aspectRatioY);
+
+        Resources res = context.getResources();
+        mDotSize = res.getDimension(R.dimen.AspectRatioTextView_dotSize);
+        mDotPaint.setStyle(Paint.Style.FILL);
+
+        setTitle();
 //		setTextColor(Compatibility.getColorStateList(context, R.color.selector_image_edit));
-	}
+    }
 
-	private void setTitle()
-	{
-		String title = mAspectRatio.getAspectRatioTitle();
-		if(title == null || title.isEmpty())  // TextUtils.isEmpty(title)
-		{
-			title = String.format("%d:%d", mAspectRatio.getAspectRatioX(), mAspectRatio.getAspectRatioY());
-			mAspectRatio.setmAspectRatioTitle(title);
-		}
-		
-		setText(title);
-	}
+    private void setTitle() {
+        String title = mAspectRatio.getAspectRatioTitle();
+        if (title == null || title.isEmpty())  // TextUtils.isEmpty(title)
+        {
+            title = String.format("%d:%d", mAspectRatio.getAspectRatioX(), mAspectRatio.getAspectRatioY());
+            mAspectRatio.setmAspectRatioTitle(title);
+        }
+
+        setText(title);
+    }
 }

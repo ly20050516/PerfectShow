@@ -11,79 +11,72 @@
 
 using namespace stasm;
 
-const char* const stasm_VERSION = STASM_VERSION;
+const char *const stasm_VERSION = STASM_VERSION;
 
 static vec_Mod mods_g;    // the ASM model(s)
 static FaceDetector facedet_g; // the face detector
 
 //-----------------------------------------------------------------------------
 
-namespace stasm
-{
-static Image img_g;     // the current image
-static void CheckStasmInit(void)
-{
-    if (mods_g.empty())
-        Err("Models not initialized (missing call to stasm_init?)");
-}
+namespace stasm {
+    static Image img_g;     // the current image
+    static void CheckStasmInit(void) {
+        if (mods_g.empty())
+            Err("Models not initialized (missing call to stasm_init?)");
+    }
 
-static void ShapeToLandmarks( // convert Shape to landmarks (float *)
-    float*       landmarks,   // out
-    const Shape& shape)       // in
-{
-    CV_Assert(shape.rows <= stasm_NLANDMARKS);
-    int i;
-    for (i = 0; i < MIN(shape.rows, stasm_NLANDMARKS); i++)
+    static void ShapeToLandmarks( // convert Shape to landmarks (float *)
+            float *landmarks,   // out
+            const Shape &shape)       // in
     {
-        landmarks[i * 2]     = float(shape(i, IX));
-        landmarks[i * 2 + 1] = float(shape(i, IY));
+        CV_Assert(shape.rows <= stasm_NLANDMARKS);
+        int i;
+        for (i = 0; i < MIN(shape.rows, stasm_NLANDMARKS); i++) {
+            landmarks[i * 2] = float(shape(i, IX));
+            landmarks[i * 2 + 1] = float(shape(i, IY));
+        }
+        // set remaining unused landmarks if any to 0,0
+        for (; i < stasm_NLANDMARKS; i++) {
+            landmarks[i * 2] = 0;
+            landmarks[i * 2 + 1] = 0;
+        }
     }
-    // set remaining unused landmarks if any to 0,0
-    for (; i < stasm_NLANDMARKS; i++)
-    {
-        landmarks[i * 2]     = 0;
-        landmarks[i * 2 + 1] = 0;
-    }
-}
 
-static const Shape LandmarksAsShape( // return a Shape
-    const float* landmarks)          // in
-{
-    Shape shape(stasm_NLANDMARKS, 2);
-    for (int i = 0; i < stasm_NLANDMARKS; i++)
+    static const Shape LandmarksAsShape( // return a Shape
+            const float *landmarks)          // in
     {
-        shape(i, IX) = landmarks[i*2];
-        shape(i, IY) = landmarks[i*2+1];
+        Shape shape(stasm_NLANDMARKS, 2);
+        for (int i = 0; i < stasm_NLANDMARKS; i++) {
+            shape(i, IX) = landmarks[i * 2];
+            shape(i, IY) = landmarks[i * 2 + 1];
+        }
+        return shape;
     }
-    return shape;
-}
 
 } // namespace stasm
 
 //-----------------------------------------------------------------------------
 
 int stasm_init_ext(        // extended version of stasm_init
-    const char* datadir,   // in: directory of face detector files
-    int         trace,     // in: 0 normal use, 1 trace to stdout and stasm.log
-    void*       detparams) // in: NULL or face detector parameters
+        const char *datadir,   // in: directory of face detector files
+        int trace,     // in: 0 normal use, 1 trace to stdout and stasm.log
+        void *detparams) // in: NULL or face detector parameters
 {
     int returnval = 1;     // assume success
     CatchOpenCvErrs();
-    try
-    {
+    try {
         print_g = (trace != 0);
         trace_g = (trace != 0);
         if (mods_g.empty()) // not yet initialized?
         {
-            if (trace)
-            {
+            if (trace) {
                 // Open a log file in the current directory (if possible).
                 // After the log file is opened, lprintf and stasm_printf
                 // will print to stasm.log (as well as to stdout).
                 OpenLogFile();
             }
             lprintf("Stasm version %s%s\n",
-                    stasm_VERSION, trace? "  Logging to stasm.log": "");
+                    stasm_VERSION, trace ? "  Logging to stasm.log" : "");
             CV_Assert(datadir && datadir[0] && STRNLEN(datadir, SLEN) < SLEN);
             InitMods(mods_g, datadir); // init ASM model(s)
             facedet_g.OpenFaceDetector_(datadir, detparams);
@@ -91,8 +84,7 @@ int stasm_init_ext(        // extended version of stasm_init
         }
         CheckStasmInit();
     }
-    catch(...)
-    {
+    catch (...) {
         returnval = 0; // a call was made to Err or a CV_Assert failed
     }
     UncatchOpenCvErrs();
@@ -100,32 +92,31 @@ int stasm_init_ext(        // extended version of stasm_init
 }
 
 int stasm_init(            // call once, at bootup (to read models from disk)
-    const char* datadir,   // in: directory of face detector files
-    int         trace)     // in: 0 normal use, 1 trace to stdout and stasm.log
+        const char *datadir,   // in: directory of face detector files
+        int trace)     // in: 0 normal use, 1 trace to stdout and stasm.log
 {
     return stasm_init_ext(datadir, trace, NULL);
 }
 
 int stasm_open_image_ext(  // extended version of stasm_open_image
-    const char* image,       // in: gray image data, top left corner at 0,0
-    int         width,     // in: image width
-    int         height,    // in: image height
-    const char* imgpath,   // in: image path, used only for err msgs and debug
-    int         multiface, // in: 0=return only one face, 1=allow multiple faces
-    int         minwidth,  // in: min face width as percentage of img width
-    void*       user)      // in: NULL or pointer to user abort func
+        const char *image,       // in: gray image data, top left corner at 0,0
+        int width,     // in: image width
+        int height,    // in: image height
+        const char *imgpath,   // in: image path, used only for err msgs and debug
+        int multiface, // in: 0=return only one face, 1=allow multiple faces
+        int minwidth,  // in: min face width as percentage of img width
+        void *user)      // in: NULL or pointer to user abort func
 {
     int returnval = 1;     // assume success
     CatchOpenCvErrs();
-    try
-    {
+    try {
         CV_Assert(imgpath && STRNLEN(imgpath, SLEN) < SLEN);
         CV_Assert(multiface == 0 || multiface == 1);
         CV_Assert(minwidth >= 1 && minwidth <= 100);
 
         CheckStasmInit();
 
-        img_g = Image(height, width,(unsigned char*)image);
+        img_g = Image(height, width, (unsigned char *) image);
 
 #if TRACE_IMAGES
         strcpy(imgpath_g, imgpath); // save the image path (for naming debug images)
@@ -133,8 +124,7 @@ int stasm_open_image_ext(  // extended version of stasm_open_image
         // call the face detector to detect the face rectangle(s)
         facedet_g.DetectFaces_(img_g, imgpath, multiface == 1, minwidth, user);
     }
-    catch(...)
-    {
+    catch (...) {
         returnval = 0; // a call was made to Err or a CV_Assert failed
     }
     UncatchOpenCvErrs();
@@ -142,27 +132,26 @@ int stasm_open_image_ext(  // extended version of stasm_open_image
 }
 
 int stasm_open_image(      // call once per image, detect faces
-    const char* image,     // in: gray image data, top left corner at 0,0
-    int         width,     // in: image width
-    int         height,    // in: image height
-    const char* imgpath,   // in: image path, used only for err msgs and debug
-    int         multiface, // in: 0=return only one face, 1=allow multiple faces
-    int         minwidth)  // in: min face width as percentage of img width
+        const char *image,     // in: gray image data, top left corner at 0,0
+        int width,     // in: image width
+        int height,    // in: image height
+        const char *imgpath,   // in: image path, used only for err msgs and debug
+        int multiface, // in: 0=return only one face, 1=allow multiple faces
+        int minwidth)  // in: min face width as percentage of img width
 {
     return stasm_open_image_ext(image, width, height, imgpath,
                                 multiface, minwidth, NULL);
 }
 
 int stasm_search_auto_ext( // extended version of stasm_search_auto
-    int*   foundface,      // out: 0=no more faces, 1=found face
-    float* landmarks,      // out: x0, y0, x1, y1, ..., caller must allocate
-    float* estyaw)         // out: NULL or pointer to estimated yaw
+        int *foundface,      // out: 0=no more faces, 1=found face
+        float *landmarks,      // out: x0, y0, x1, y1, ..., caller must allocate
+        float *estyaw)         // out: NULL or pointer to estimated yaw
 {
     int returnval = 1;     // assume success
     *foundface = 0;        // but assume no face found
     CatchOpenCvErrs();
-    try
-    {
+    try {
         CheckStasmInit();
 
         if (img_g.rows == 0 || img_g.cols == 0)
@@ -176,8 +165,7 @@ int stasm_search_auto_ext( // extended version of stasm_search_auto
         // Get the start shape for the next face in the image, and the ROI around it.
         // The shape will be wrt the ROI frame.
         if (NextStartShapeAndRoi(shape, face_roi, detpar_roi, detpar,
-                                 img_g, mods_g, facedet_g))
-        {
+                                 img_g, mods_g, facedet_g)) {
             // now working with maybe flipped ROI and start shape in ROI frame
             *foundface = 1;
             if (trace_g)   // show start shape?
@@ -204,8 +192,7 @@ int stasm_search_auto_ext( // extended version of stasm_search_auto
                 *estyaw = float(detpar.yaw);
         }
     }
-    catch(...)
-    {
+    catch (...) {
         returnval = 0; // a call was made to Err or a CV_Assert failed
     }
     UncatchOpenCvErrs();
@@ -213,20 +200,20 @@ int stasm_search_auto_ext( // extended version of stasm_search_auto
 }
 
 int stasm_search_auto( // call repeatedly to find all faces
-    int*   foundface,  // out: 0=no more faces, 1=found face
-    float* landmarks)  // out: x0, y0, x1, y1, ..., caller must allocate
+        int *foundface,  // out: 0=no more faces, 1=found face
+        float *landmarks)  // out: x0, y0, x1, y1, ..., caller must allocate
 {
     return stasm_search_auto_ext(foundface, landmarks, NULL);
 }
 
 int stasm_search_single(   // wrapper for stasm_search_auto and friends
-    int*        foundface, // out: 0=no face, 1=found face
-    float*      landmarks, // out: x0, y0, x1, y1, ..., caller must allocate
-    const char* image,     // in: gray image data, top left corner at 0,0
-    int         width,     // in: image width
-    int         height,    // in: image height
-    const char* imgpath,   // in: image path, used only for err msgs and debug
-    const char* datadir)   // in: directory of face detector files
+        int *foundface, // out: 0=no face, 1=found face
+        float *landmarks, // out: x0, y0, x1, y1, ..., caller must allocate
+        const char *image,     // in: gray image data, top left corner at 0,0
+        int width,     // in: image width
+        int height,    // in: image height
+        const char *imgpath,   // in: image path, used only for err msgs and debug
+        const char *datadir)   // in: directory of face detector files
 {
     if (!stasm_init(datadir, 0 /*trace*/))
         return false;
@@ -239,21 +226,20 @@ int stasm_search_single(   // wrapper for stasm_search_auto and friends
 }
 
 int stasm_search_pinned(    // call after the user has pinned some points
-    float*       landmarks, // out: x0, y0, x1, y1, ..., caller must allocate
-    const float* pinned,    // in: pinned landmarks (0,0 points not pinned)
-    const char*  image,     // in: gray image data, top left corner at 0,0
-    int          width,     // in: image width
-    int          height,    // in: image height
-    const char*  imgpath)   // in: image path, used only for err msgs and debug
+        float *landmarks, // out: x0, y0, x1, y1, ..., caller must allocate
+        const float *pinned,    // in: pinned landmarks (0,0 points not pinned)
+        const char *image,     // in: gray image data, top left corner at 0,0
+        int width,     // in: image width
+        int height,    // in: image height
+        const char *imgpath)   // in: image path, used only for err msgs and debug
 {
     int returnval = 1;     // assume success
     CatchOpenCvErrs();
-    try
-    {
+    try {
         CV_Assert(imgpath && STRNLEN(imgpath, SLEN) < SLEN);
         CheckStasmInit();
 
-        img_g = Image(height, width, (unsigned char*)image);
+        img_g = Image(height, width, (unsigned char *) image);
 
         const Shape pinnedshape(LandmarksAsShape(pinned));
 
@@ -278,34 +264,32 @@ int stasm_search_pinned(    // call after the user has pinned some points
         if (trace_g)
             lprintf("\n");
     }
-    catch(...)
-    {
+    catch (...) {
         returnval = 0; // a call was made to Err or a CV_Assert failed
     }
     UncatchOpenCvErrs();
     return returnval;
 }
 
-const char* stasm_lasterr(void) // same as LastErr but not in stasm namespace
+const char *stasm_lasterr(void) // same as LastErr but not in stasm namespace
 {
     return LastErr(); // return the last error message (stashed in sgErr)
 }
 
 void stasm_force_points_into_image( // force landmarks into image boundary
-    float* landmarks,               // io
-    int    ncols,                   // in
-    int    nrows)                   // in
+        float *landmarks,               // io
+        int ncols,                   // in
+        int nrows)                   // in
 {
-    for (int i = 0; i < stasm_NLANDMARKS; i++)
-    {
-        landmarks[i * 2]     = Clamp(landmarks[i * 2],     0.0f, float(ncols-1));
-        landmarks[i * 2 + 1] = Clamp(landmarks[i * 2 + 1], 0.0f, float(nrows-1));
+    for (int i = 0; i < stasm_NLANDMARKS; i++) {
+        landmarks[i * 2] = Clamp(landmarks[i * 2], 0.0f, float(ncols - 1));
+        landmarks[i * 2 + 1] = Clamp(landmarks[i * 2 + 1], 0.0f, float(nrows - 1));
     }
 }
 
 void stasm_convert_shape( // convert stasm_NLANDMARKS points to given number of points
-    float* landmarks,     // io: return all points zero if can't do conversion
-    int    nlandmarks)    // in: see ConvertShape
+        float *landmarks,     // io: return all points zero if can't do conversion
+        int nlandmarks)    // in: see ConvertShape
 {
     Shape newshape = ConvertShape(LandmarksAsShape(landmarks), nlandmarks);
     if (newshape.rows)
@@ -316,9 +300,8 @@ void stasm_convert_shape( // convert stasm_NLANDMARKS points to given number of 
 }
 
 void stasm_printf(      // print to stdout and to the stasm.log file if it is open
-    const char* format, // args like printf
-                ...)
-{
+        const char *format, // args like printf
+        ...) {
     char s[SBIG];
     va_list args;
     va_start(args, format);

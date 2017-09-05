@@ -3,6 +3,6 @@
 
     <item android:drawable="@drawable/blush_pressed" android:state_pressed="true" />
     <item android:drawable="@drawable/blush_selected" android:state_selected="true" />
-    <item android:drawable="@drawable/blush_default"/>
+    <item android:drawable="@drawable/blush_default" />
 
 </selector>

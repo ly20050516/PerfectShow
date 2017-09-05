@@ -2,7 +2,7 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:drawable="@drawable/eye_brow_pressed" android:state_pressed="true" />
-	<item android:drawable="@drawable/eye_brow_selected" android:state_selected="true" />
-    <item android:drawable="@drawable/eye_brow_default"/>
+    <item android:drawable="@drawable/eye_brow_selected" android:state_selected="true" />
+    <item android:drawable="@drawable/eye_brow_default" />
 
 </selector>

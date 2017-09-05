@@ -14,125 +14,121 @@
 
 #include "stasm.h"
 
-namespace stasm
-{
-static int TabPoint(    // return first used point in tab, -1 if none
-    const int*   tab,   // in
-    int          ntab,  // in
-    const Shape& shape) // in
-{
-    for (int i = 0; i < ntab; i++)
-        if (PointUsed(shape, tab[i]))
-            return tab[i]; // note return
-
-    return -1;
-}
-
-static double CanonicalEyeMouthDist( // return 0 if pupils and mouth not avail
-    const Shape& shape17)            // in
-{
-    if (!PointUsed(shape17, L17_LPupil) ||
-        !PointUsed(shape17, L17_RPupil) ||
-        !PointUsed(shape17, L17_CBotOfBotLip))
+namespace stasm {
+    static int TabPoint(    // return first used point in tab, -1 if none
+            const int *tab,   // in
+            int ntab,  // in
+            const Shape &shape) // in
     {
-        return 0; // note return
+        for (int i = 0; i < ntab; i++)
+            if (PointUsed(shape, tab[i]))
+                return tab[i]; // note return
+
+        return -1;
     }
-    return PointDist(
-             MeanPoint(shape17, L17_LPupil, L17_RPupil, IX), // eye mid point
-             MeanPoint(shape17, L17_LPupil, L17_RPupil, IY),
-             shape17(L17_CBotOfBotLip, IX),                  // bot of bot lip
-             shape17(L17_CBotOfBotLip, IY));
-}
 
-double EyeMouthDist(    // eye-mouth distance of a face shape, return 1 if not a face
-    const Shape& shape) // in
-{
-    static const int eyes[] = // surrogates for pupil midpoint
+    static double CanonicalEyeMouthDist( // return 0 if pupils and mouth not avail
+            const Shape &shape17)            // in
     {
-        L17_LPupil,
-        L17_RPupil,
-        L17_LEyeOuter,
-        L17_REyeOuter,
-        L17_LEyeInner,
-        L17_REyeInner,
-        L17_LEyebrowInner,
-        L17_REyebrowInner,
-        L17_LEyebrowOuter,
-        L17_REyebrowOuter
-    };
-    static const int mouths[] = // surrogates for bot of bot lip
-    {
-        L17_CBotOfBotLip,
-        L17_CTopOfTopLip,
-        L17_LMouthCorner,
-        L17_RMouthCorner
-    };
-    const Shape shape17(Shape17OrEmpty(shape));
-    if (shape17.rows == 0)            // could not convert the shape to a Shape17?
-        return ShapeWidth(shape) / 2; // fallback, note return
-    double eyemouth = CanonicalEyeMouthDist(shape17);
-    if (eyemouth == 0) // pupils and mouth not available?
-    {
-        const int eye   = TabPoint(eyes,   NELEMS(eyes),   shape17);
-        const int mouth = TabPoint(mouths, NELEMS(mouths), shape17);
-        if (eye >= 0 && mouth >= 0)  // actual or surrogate points available?
-        {
-            eyemouth = PointDist(shape17, eye, mouth) *
-                       CanonicalEyeMouthDist(MEANSHAPE17) /
-                       PointDist(MEANSHAPE17, eye, mouth);
+        if (!PointUsed(shape17, L17_LPupil) ||
+            !PointUsed(shape17, L17_RPupil) ||
+            !PointUsed(shape17, L17_CBotOfBotLip)) {
+            return 0; // note return
         }
+        return PointDist(
+                MeanPoint(shape17, L17_LPupil, L17_RPupil, IX), // eye mid point
+                MeanPoint(shape17, L17_LPupil, L17_RPupil, IY),
+                shape17(L17_CBotOfBotLip, IX),                  // bot of bot lip
+                shape17(L17_CBotOfBotLip, IY));
     }
-    if (eyemouth == 0)
-    {
-        // last resort, estimate eyemouth dist from shape extent
-        eyemouth = MAX(ShapeWidth(shape17), ShapeHeight(shape17)) *
-                   PointDist(MEANSHAPE17, L17_LPupil, L17_CBotOfBotLip) /
-                   MAX(ShapeWidth(MEANSHAPE17), ShapeHeight(MEANSHAPE17));
-    }
-    CV_Assert(eyemouth > 1 && eyemouth < 1e5); // sanity check
-    return eyemouth;
-}
 
-double InterEyeDist(    // inter-pupil distance of a face shape
-    const Shape& shape) // in
-{
-    static const int leyes[] = // surrogates for left pupil
+    double EyeMouthDist(    // eye-mouth distance of a face shape, return 1 if not a face
+            const Shape &shape) // in
     {
-        L17_LPupil,
-        L17_LEyeOuter,
-        L17_LEyeInner,
-        L17_LEyebrowInner,
-        L17_LEyebrowOuter
-    };
-    static const int reyes[] = // surrogates for right pupil
-    {
-        L17_RPupil,
-        L17_REyeOuter,
-        L17_REyeInner,
-        L17_REyebrowInner,
-        L17_REyebrowOuter
-    };
-    const Shape shape17(Shape17OrEmpty(shape));
-    if (shape17.rows == 0)            // could not convert the shape to a Shape17?
-        return ShapeWidth(shape) / 2; // fallback, note return
-    double eyedist = 0;
-    const int leye = TabPoint(leyes, NELEMS(leyes), shape17);
-    const int reye = TabPoint(reyes, NELEMS(reyes), shape17);
-    if (leye >= 0 && reye >= 0 &&           // actual or surrogate points available?
-        PointDist(shape17, leye, reye) > 1) // surrogates aren't co-located?
-    {
-        eyedist = PointDist(shape17, leye, reye) *
-                  PointDist(MEANSHAPE17, L17_LPupil, L17_RPupil) /
-                  PointDist(MEANSHAPE17, leye, reye);
+        static const int eyes[] = // surrogates for pupil midpoint
+                {
+                        L17_LPupil,
+                        L17_RPupil,
+                        L17_LEyeOuter,
+                        L17_REyeOuter,
+                        L17_LEyeInner,
+                        L17_REyeInner,
+                        L17_LEyebrowInner,
+                        L17_REyebrowInner,
+                        L17_LEyebrowOuter,
+                        L17_REyebrowOuter
+                };
+        static const int mouths[] = // surrogates for bot of bot lip
+                {
+                        L17_CBotOfBotLip,
+                        L17_CTopOfTopLip,
+                        L17_LMouthCorner,
+                        L17_RMouthCorner
+                };
+        const Shape shape17(Shape17OrEmpty(shape));
+        if (shape17.rows == 0)            // could not convert the shape to a Shape17?
+            return ShapeWidth(shape) / 2; // fallback, note return
+        double eyemouth = CanonicalEyeMouthDist(shape17);
+        if (eyemouth == 0) // pupils and mouth not available?
+        {
+            const int eye = TabPoint(eyes, NELEMS(eyes), shape17);
+            const int mouth = TabPoint(mouths, NELEMS(mouths), shape17);
+            if (eye >= 0 && mouth >= 0)  // actual or surrogate points available?
+            {
+                eyemouth = PointDist(shape17, eye, mouth) *
+                           CanonicalEyeMouthDist(MEANSHAPE17) /
+                           PointDist(MEANSHAPE17, eye, mouth);
+            }
+        }
+        if (eyemouth == 0) {
+            // last resort, estimate eyemouth dist from shape extent
+            eyemouth = MAX(ShapeWidth(shape17), ShapeHeight(shape17)) *
+                       PointDist(MEANSHAPE17, L17_LPupil, L17_CBotOfBotLip) /
+                       MAX(ShapeWidth(MEANSHAPE17), ShapeHeight(MEANSHAPE17));
+        }
+        CV_Assert(eyemouth > 1 && eyemouth < 1e5); // sanity check
+        return eyemouth;
     }
-    else // last resort, estimate inter-pupil distance from shape extent
+
+    double InterEyeDist(    // inter-pupil distance of a face shape
+            const Shape &shape) // in
     {
-        eyedist = MAX(ShapeWidth(shape17), ShapeHeight(shape17)) *
-                  PointDist(MEANSHAPE17, L17_LPupil, L17_RPupil) /
-                  MAX(ShapeWidth(MEANSHAPE17), ShapeHeight(MEANSHAPE17));
+        static const int leyes[] = // surrogates for left pupil
+                {
+                        L17_LPupil,
+                        L17_LEyeOuter,
+                        L17_LEyeInner,
+                        L17_LEyebrowInner,
+                        L17_LEyebrowOuter
+                };
+        static const int reyes[] = // surrogates for right pupil
+                {
+                        L17_RPupil,
+                        L17_REyeOuter,
+                        L17_REyeInner,
+                        L17_REyebrowInner,
+                        L17_REyebrowOuter
+                };
+        const Shape shape17(Shape17OrEmpty(shape));
+        if (shape17.rows == 0)            // could not convert the shape to a Shape17?
+            return ShapeWidth(shape) / 2; // fallback, note return
+        double eyedist = 0;
+        const int leye = TabPoint(leyes, NELEMS(leyes), shape17);
+        const int reye = TabPoint(reyes, NELEMS(reyes), shape17);
+        if (leye >= 0 && reye >= 0 &&           // actual or surrogate points available?
+            PointDist(shape17, leye, reye) > 1) // surrogates aren't co-located?
+        {
+            eyedist = PointDist(shape17, leye, reye) *
+                      PointDist(MEANSHAPE17, L17_LPupil, L17_RPupil) /
+                      PointDist(MEANSHAPE17, leye, reye);
+        } else // last resort, estimate inter-pupil distance from shape extent
+        {
+            eyedist = MAX(ShapeWidth(shape17), ShapeHeight(shape17)) *
+                      PointDist(MEANSHAPE17, L17_LPupil, L17_RPupil) /
+                      MAX(ShapeWidth(MEANSHAPE17), ShapeHeight(MEANSHAPE17));
+        }
+        CV_Assert(eyedist > 1 && eyedist < 1e5); // sanity check
+        return eyedist;
     }
-    CV_Assert(eyedist > 1 && eyedist < 1e5); // sanity check
-    return eyedist;
-}
 
 } // namespace stasm

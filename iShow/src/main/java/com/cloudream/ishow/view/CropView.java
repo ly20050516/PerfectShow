@@ -1,9 +1,5 @@
 package com.cloudream.ishow.view;
 
-import com.cloudream.ishow.R;
-import com.cloudream.ishow.widget.CropImageView;
-import com.cloudream.ishow.widget.GestureCropImageView;
-
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.RectF;
@@ -12,64 +8,58 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.FrameLayout;
 
-public class CropView extends FrameLayout
-{
+import com.cloudream.ishow.R;
+import com.cloudream.ishow.widget.CropImageView;
+import com.cloudream.ishow.widget.GestureCropImageView;
 
-	private final GestureCropImageView mGestureCropImageView;
-	private final OverlayView mViewOverlay;
+public class CropView extends FrameLayout {
 
-	public CropView(Context context, AttributeSet attrs)
-	{
-		this(context, attrs, 0);
-	}
+    private final GestureCropImageView mGestureCropImageView;
+    private final OverlayView mViewOverlay;
 
-	public CropView(Context context, AttributeSet attrs, int defStyleAttr)
-	{
-		super(context, attrs, defStyleAttr);
+    public CropView(Context context, AttributeSet attrs) {
+        this(context, attrs, 0);
+    }
 
-		LayoutInflater.from(context).inflate(R.layout.crop_view, this, true);
-		mGestureCropImageView = (GestureCropImageView) findViewById(R.id.image_view_crop);
-		mViewOverlay = (OverlayView) findViewById(R.id.view_overlay);
+    public CropView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
 
-		TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CropView);
-		mViewOverlay.processStyledAttributes(a);
-		mGestureCropImageView.processStyledAttributes(a);
-		a.recycle();
+        LayoutInflater.from(context).inflate(R.layout.crop_view, this, true);
+        mGestureCropImageView = (GestureCropImageView) findViewById(R.id.image_view_crop);
+        mViewOverlay = (OverlayView) findViewById(R.id.view_overlay);
 
-		mGestureCropImageView.setCropBoundsChangeListener(new CropImageView.OnCropBoundsChangeListener()
-		{
-			@Override
-			public void onCropAspectRatioChanged(float cropRatio)
-			{
-				mViewOverlay.setTargetAspectRatio(cropRatio);
-			}
-		});
-		mViewOverlay.setOverlayViewChangeListener(new OverlayView.OnOverlayViewChangeListener()
-		{
-			@Override
-			public void onCropRectUpdated(RectF cropRect)
-			{
-				mGestureCropImageView.setCropRect(cropRect);
-			}
-		});
-	}
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CropView);
+        mViewOverlay.processStyledAttributes(a);
+        mGestureCropImageView.processStyledAttributes(a);
+        a.recycle();
 
-	@Override
-	public boolean shouldDelayChildPressedState()
-	{
-		return false;
-	}
+        mGestureCropImageView.setCropBoundsChangeListener(new CropImageView.OnCropBoundsChangeListener() {
+            @Override
+            public void onCropAspectRatioChanged(float cropRatio) {
+                mViewOverlay.setTargetAspectRatio(cropRatio);
+            }
+        });
+        mViewOverlay.setOverlayViewChangeListener(new OverlayView.OnOverlayViewChangeListener() {
+            @Override
+            public void onCropRectUpdated(RectF cropRect) {
+                mGestureCropImageView.setCropRect(cropRect);
+            }
+        });
+    }
 
-	@NonNull
-	public GestureCropImageView getCropImageView()
-	{
-		return mGestureCropImageView;
-	}
+    @Override
+    public boolean shouldDelayChildPressedState() {
+        return false;
+    }
 
-	@NonNull
-	public OverlayView getOverlayView()
-	{
-		return mViewOverlay;
-	}
+    @NonNull
+    public GestureCropImageView getCropImageView() {
+        return mGestureCropImageView;
+    }
+
+    @NonNull
+    public OverlayView getOverlayView() {
+        return mViewOverlay;
+    }
 
 }

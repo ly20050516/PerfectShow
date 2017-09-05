@@ -15,7 +15,7 @@ extern "C" {
  * Signature: (Landroid/graphics/Bitmap;Landroid/graphics/Point;FFF)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeApplyWhirlPinch
-  (JNIEnv *, jclass, jobject, jobject, jfloat, jfloat, jfloat);
+        (JNIEnv *, jclass, jobject, jobject, jfloat, jfloat, jfloat);
 
 /*
  * Class:     com_cloudream_ishow_algorithm_Effect
@@ -23,7 +23,7 @@ JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeApplyWhir
  * Signature: (Landroid/graphics/Bitmap;FFF)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeApplyWhirlPinch2
-  (JNIEnv *, jclass, jobject, jfloat, jfloat, jfloat);
+        (JNIEnv *, jclass, jobject, jfloat, jfloat, jfloat);
 
 /*
  * Class:     com_cloudream_ishow_algorithm_Effect
@@ -31,7 +31,7 @@ JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeApplyWhir
  * Signature: (Landroid/graphics/Bitmap;Landroid/graphics/PointF;Landroid/graphics/PointF;FI)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeDistort
-  (JNIEnv *, jclass, jobject, jobject, jobject, jfloat, jint);
+        (JNIEnv *, jclass, jobject, jobject, jobject, jfloat, jint);
 
 /*
  * Class:     com_cloudream_ishow_algorithm_Effect
@@ -39,7 +39,7 @@ JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeDistort
  * Signature: (Landroid/graphics/PointF;FLandroid/graphics/PointF;Landroid/graphics/PointF;Landroid/graphics/PointF;Landroid/graphics/PointF;)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeCatmullRomSpline
-  (JNIEnv *, jclass, jobject, jfloat, jobject, jobject, jobject, jobject);
+        (JNIEnv *, jclass, jobject, jfloat, jobject, jobject, jobject, jobject);
 
 /*
  * Class:     com_cloudream_ishow_algorithm_Effect
@@ -47,7 +47,7 @@ JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeCatmullRo
  * Signature: (Landroid/graphics/Bitmap;IF)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeTone
-  (JNIEnv *, jclass, jobject, jint, jfloat);
+        (JNIEnv *, jclass, jobject, jint, jfloat);
 
 /*
  * Class:     com_cloudream_ishow_algorithm_Effect
@@ -55,7 +55,7 @@ JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeTone
  * Signature: (Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeGrayToAlpha
-  (JNIEnv *, jclass, jobject, jobject);
+        (JNIEnv *, jclass, jobject, jobject);
 
 /*
  * Class:     com_cloudream_ishow_algorithm_Effect
@@ -63,7 +63,7 @@ JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeGrayToAlp
  * Signature: (ILandroid/graphics/Bitmap;Landroid/graphics/Bitmap;)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeColorToAlpha
-  (JNIEnv *, jclass, jint, jobject, jobject);
+        (JNIEnv *, jclass, jint, jobject, jobject);
 
 /*
  * Class:     com_cloudream_ishow_algorithm_Effect
@@ -71,7 +71,7 @@ JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeColorToAl
  * Signature: (Landroid/graphics/Bitmap;Landroid/graphics/Bitmap;IIFZZ)V
  */
 JNIEXPORT void JNICALL Java_com_cloudream_ishow_algorithm_Effect_nativeSelectContiguousRegionByColor
-  (JNIEnv *, jclass, jobject, jobject, jint, jint, jfloat, jboolean, jboolean);
+        (JNIEnv *, jclass, jobject, jobject, jint, jint, jfloat, jboolean, jboolean);
 
 #ifdef __cplusplus
 }

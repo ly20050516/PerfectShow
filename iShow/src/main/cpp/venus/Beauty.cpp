@@ -30,65 +30,62 @@ namespace venus {
 		2. abs(R - G) <= 15;  // R and G components must be close together
 		3. R > B and G > B;   // B component must be the smallest component
 */
-static bool isSkinColor_RGB(const uint8_t* color)
-{
+    static bool isSkinColor_RGB(const uint8_t *color) {
 #if USE_BGRA_LAYOUT
-	const uint8_t& b = color[0], &g = color[1], &r = color[2];
+        const uint8_t& b = color[0], &g = color[1], &r = color[2];
 #else
-	const uint8_t& r = color[0], &g = color[1], &b = color[2];
+        const uint8_t &r = color[0], &g = color[1], &b = color[2];
 #endif
 
-	if(r > 95 && g > 40 && b > 20 &&
-		r - g > 15 && r - b > 15)
-		return true;
+        if (r > 95 && g > 40 && b > 20 &&
+            r - g > 15 && r - b > 15)
+            return true;
 
-	if(r > 220 && g > 210 && b > 170 &&
-		r > b && g > b &&
-		std::abs(r - g) <= 15)
-		return true;
+        if (r > 220 && g > 210 && b > 170 &&
+            r > b && g > b &&
+            std::abs(r - g) <= 15)
+            return true;
 
-	return false;
-}
+        return false;
+    }
 
-static cv::Mat calculateSkinRegion(const cv::Mat& image, bool(*predicate)(const uint8_t*))
-{
-	// an RGB/RGBA image is required
-	assert(image.depth() == CV_8U && image.isContinuous());
+    static cv::Mat calculateSkinRegion(const cv::Mat &image, bool(*predicate)(const uint8_t *)) {
+        // an RGB/RGBA image is required
+        assert(image.depth() == CV_8U && image.isContinuous());
 
-	const int channel = image.channels();
-	assert(channel >= 3);
-	const int length = image.rows * image.cols;
-	const uint8_t* image_data = image.data;
+        const int channel = image.channels();
+        assert(channel >= 3);
+        const int length = image.rows * image.cols;
+        const uint8_t *image_data = image.data;
 
-	Mat mask(image.rows, image.cols, CV_8UC1);
-	uint8_t* mask_data = mask.data;
+        Mat mask(image.rows, image.cols, CV_8UC1);
+        uint8_t *mask_data = mask.data;
 
-	#pragma omp parallel for
-	for(int i = 0; i < length; ++i)
-		mask_data[i] = predicate(image_data + i * channel) ? 255 : 0;
-	
-	return mask;
-}
+#pragma omp parallel for
+        for (int i = 0; i < length; ++i)
+            mask_data[i] = predicate(image_data + i * channel) ? 255 : 0;
 
-cv::Mat Beauty::calculateSkinRegion_RGB(const cv::Mat& image)
-{
-	Mat mask = calculateSkinRegion(image, isSkinColor_RGB);
+        return mask;
+    }
+
+    cv::Mat Beauty::calculateSkinRegion_RGB(const cv::Mat &image) {
+        Mat mask = calculateSkinRegion(image, isSkinColor_RGB);
 
 #if 1
-	// post-processing, use closing morphology operation to kick out small holes
-	// the larger the radius, the more time it consumes, so no more than 2 here.
-	int radius  = std::min(2, cvRound(std::max(image.rows, image.cols) * 0.01F));
+        // post-processing, use closing morphology operation to kick out small holes
+        // the larger the radius, the more time it consumes, so no more than 2 here.
+        int radius = std::min(2, cvRound(std::max(image.rows, image.cols) * 0.01F));
 
-	const int size = radius * 2 + 1;
-	const Point2i anchor(radius, radius);
-	int iterations = 1;  // can be tuned
-	Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, Size(size, size), anchor);
+        const int size = radius * 2 + 1;
+        const Point2i anchor(radius, radius);
+        int iterations = 1;  // can be tuned
+        Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, Size(size, size), anchor);
 
-	cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, kernel, anchor, iterations);
+        cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, kernel, anchor, iterations);
 #endif
 
-	return mask;
-}
+        return mask;
+    }
 
 /*
 	"Pixel-Based Skin Color Classifier: A Review" by Amit Kumar and Shivani Malhotra
@@ -109,12 +106,11 @@ cv::Mat Beauty::calculateSkinRegion_RGB(const cv::Mat& image)
 		C = [97.0946 24.4700; 24.4700 141.9966]
 		inv(C) = [0.0107668  -0.0018554; -0.0018554   0.0073622]
 */
-static float skinColorProbability(const uint8_t* color)
-{
+    static float skinColorProbability(const uint8_t *color) {
 #if USE_BGRA_LAYOUT
-	const uint8_t& B = color[0], &G = color[1], &R = color[2];
+        const uint8_t& B = color[0], &G = color[1], &R = color[2];
 #else
-	const uint8_t& R = color[0], &G = color[1], &B = color[2];
+        const uint8_t &R = color[0], &G = color[1], &B = color[2];
 #endif
 
 /*
@@ -135,33 +131,32 @@ static float skinColorProbability(const uint8_t* color)
 */
 //	float U = (-0.148 * R - 0.291 * G + 0.439 * B + 128);
 //	float V = ( 0.439 * R - 0.368 * G - 0.071 * B + 128);
-	float Y = 0.299F * R + 0.587F * G + 0.114F * B + 16.0F;
-	float U = 0.492F * (B - Y) + 128.0F;
-	float V = 0.877F * (R - Y) + 128.0F;
+        float Y = 0.299F * R + 0.587F * G + 0.114F * B + 16.0F;
+        float U = 0.492F * (B - Y) + 128.0F;
+        float V = 0.877F * (R - Y) + 128.0F;
 
-	// [Cb-m0 Cr-m1] * [  0.0107668 -0.0018554 ] * [ Cb-m0 ]
-	//                 [ -0.0018554  0.0073622 ]   [ Cr-m1 ]
-	float tmp0 = U - 117.4316F;
-	float tmp1 = V - 148.5599F;
-	float tmp2 = +0.0107668F * tmp0 - 0.0018554F * tmp1;
-	float tmp3 = -0.0018554F * tmp0 + 0.0073622F * tmp1;
-	float tmp4 = tmp0 * tmp2 + tmp1 * tmp3;
+        // [Cb-m0 Cr-m1] * [  0.0107668 -0.0018554 ] * [ Cb-m0 ]
+        //                 [ -0.0018554  0.0073622 ]   [ Cr-m1 ]
+        float tmp0 = U - 117.4316F;
+        float tmp1 = V - 148.5599F;
+        float tmp2 = +0.0107668F * tmp0 - 0.0018554F * tmp1;
+        float tmp3 = -0.0018554F * tmp0 + 0.0073622F * tmp1;
+        float tmp4 = tmp0 * tmp2 + tmp1 * tmp3;
 
-	return std::exp(-0.5F * tmp4);
-}
+        return std::exp(-0.5F * tmp4);
+    }
 
-cv::Mat Beauty::calculateSkinRegion_YCbCr(const cv::Mat& image)
-{
-	// an RGB/RGBA image is required
-	assert(image.depth() == CV_8U && image.isContinuous());
+    cv::Mat Beauty::calculateSkinRegion_YCbCr(const cv::Mat &image) {
+        // an RGB/RGBA image is required
+        assert(image.depth() == CV_8U && image.isContinuous());
 
-	const int channel = image.channels();
-	assert(channel >= 3);
-	const int length = image.rows * image.cols;
-	const uint8_t* image_data = image.data;
+        const int channel = image.channels();
+        assert(channel >= 3);
+        const int length = image.rows * image.cols;
+        const uint8_t *image_data = image.data;
 
-	Mat mask(image.rows, image.cols, CV_32FC1);
-	float* mask_data = mask.ptr<float>();
+        Mat mask(image.rows, image.cols, CV_32FC1);
+        float *mask_data = mask.ptr<float>();
 
 /*
 	https://github.com/Itseez/opencv/blob/master/modules/imgproc/src/color.cpp#L7502
@@ -172,205 +167,198 @@ cv::Mat Beauty::calculateSkinRegion_YCbCr(const cv::Mat& image)
 	Otherwise, we could use the line below to convert RGB to YUV color mode.
 	cvtColor(image_rgb, image_yuv, CV_BGR2YUV);
 */
-	#pragma omp parallel for
-	for(int i = 0; i < length; ++i)
-		mask_data[i] = skinColorProbability(image_data + i * channel);
+#pragma omp parallel for
+        for (int i = 0; i < length; ++i)
+            mask_data[i] = skinColorProbability(image_data + i * channel);
 
 #if 1  // equalization
-	double min; // = *std::min_element(region.begin<float>(), region.end<float>());
-	double max; // = *std::max_element(region.begin<float>(), region.end<float>());
+        double min; // = *std::min_element(region.begin<float>(), region.end<float>());
+        double max; // = *std::max_element(region.begin<float>(), region.end<float>());
 //	auto min_max = std::minmax_element(region.begin<float>(), region.end<float>());
-	cv::minMaxLoc(mask, &min, &max);
+        cv::minMaxLoc(mask, &min, &max);
 //	std::cout << "min = " << min << ", max = " << max << '\n';
 
-	// binaryzation
+        // binaryzation
 //	float mean = (min + max)/2;
 //	cv::threshold(region, region, mean/* threshold */, 1.0/* max_value */, THRESH_BINARY);
 
-	if(min == max)  // single color in original image, bypass divided by zero.
-		mask.convertTo(mask, CV_8UC1, 255.0F);
-	else
-	{
-		// [min, max] maps to [0, 1], y = (x - min)/(max - min);
-		// y = k*x + b; k = 1/(max -min); b = -min/(max -min);
-		double k = 255/(max - min), b = -min * k;
-		mask.convertTo(mask, CV_8UC1, k, b);
-	}
+        if (min == max)  // single color in original image, bypass divided by zero.
+            mask.convertTo(mask, CV_8UC1, 255.0F);
+        else {
+            // [min, max] maps to [0, 1], y = (x - min)/(max - min);
+            // y = k*x + b; k = 1/(max -min); b = -min/(max -min);
+            double k = 255 / (max - min), b = -min * k;
+            mask.convertTo(mask, CV_8UC1, k, b);
+        }
 //	cv::imshow("mask", mask);
 #endif
-	return mask;
-}
+        return mask;
+    }
 
 // Decision boundary of HSV color space is defined as
 // H = [0, 50], S = [0.20, 0.68], and V = [0.35, 1.0] 
-static bool isSkinColor_HSV(const uint8_t* color)
-{
+    static bool isSkinColor_HSV(const uint8_t *color) {
 #if USE_BGRA_LAYOUT
-	const uint8_t& b = color[0], &g = color[1], &r = color[2];
+        const uint8_t& b = color[0], &g = color[1], &r = color[2];
 #else
-	const uint8_t& r = color[0], &g = color[1], &b = color[2];
+        const uint8_t &r = color[0], &g = color[1], &b = color[2];
 #endif
 
-	float rgb[3] = { r/255.0F, g/255.0F, b/255.0F };
-	float hsv[3];
-	rgb2hsv(rgb, hsv);
+        float rgb[3] = {r / 255.0F, g / 255.0F, b / 255.0F};
+        float hsv[3];
+        rgb2hsv(rgb, hsv);
 
-	return 0 <= hsv[0] && hsv[0] <= 50/360.0F &&
-		0.20F < hsv[1] && hsv[1] <= 0.68F &&
-		0.35F < hsv[2] && hsv[2] <= 1.00F;
-}
+        return 0 <= hsv[0] && hsv[0] <= 50 / 360.0F &&
+               0.20F < hsv[1] && hsv[1] <= 0.68F &&
+               0.35F < hsv[2] && hsv[2] <= 1.00F;
+    }
 
-cv::Mat Beauty::calculateSkinRegion_HSV(const cv::Mat& image)
-{
-	Mat mask = calculateSkinRegion(image, isSkinColor_HSV);
-	return mask;
-}
+    cv::Mat Beauty::calculateSkinRegion_HSV(const cv::Mat &image) {
+        Mat mask = calculateSkinRegion(image, isSkinColor_HSV);
+        return mask;
+    }
 
 // <gegl>/operations/common/red-eye-removal.c
-void redEyeReduction(float* color, const float& threshold)
-{
+    void redEyeReduction(float *color, const float &threshold) {
 #if USE_BGRA_LAYOUT
-	float &b = color[0], &g = color[1], &r = color[2];
+        float &b = color[0], &g = color[1], &r = color[2];
 #else
-	float &r = color[0], &g = color[1], &b = color[2];
+        float &r = color[0], &g = color[1], &b = color[2];
 #endif
 
-	constexpr float RED_FACTOR   = 0.5133333F;
-	constexpr float GREEN_FACTOR = 1.0000000F;
-	constexpr float BLUE_FACTOR  = 0.1933333F;
+        constexpr float RED_FACTOR = 0.5133333F;
+        constexpr float GREEN_FACTOR = 1.0000000F;
+        constexpr float BLUE_FACTOR = 0.1933333F;
 
-	float adjusted_r = r * RED_FACTOR;
-	float adjusted_g = g * GREEN_FACTOR;
-	float adjusted_b = b * BLUE_FACTOR;
-	float adjusted_t = threshold * 1.6F - 0.8F;
+        float adjusted_r = r * RED_FACTOR;
+        float adjusted_g = g * GREEN_FACTOR;
+        float adjusted_b = b * BLUE_FACTOR;
+        float adjusted_t = threshold * 1.6F - 0.8F;
 
-	if(adjusted_r >= adjusted_g - adjusted_t &&
-	   adjusted_r >= adjusted_b - adjusted_t)
-	{
-		float tmp = (adjusted_g + adjusted_b) / (2 * RED_FACTOR);
-		r = venus::clamp(tmp, 0.0F, 1.0F);
-	}
-	// Otherwise, leave the red channel alone
-}
+        if (adjusted_r >= adjusted_g - adjusted_t &&
+            adjusted_r >= adjusted_b - adjusted_t) {
+            float tmp = (adjusted_g + adjusted_b) / (2 * RED_FACTOR);
+            r = venus::clamp(tmp, 0.0F, 1.0F);
+        }
+        // Otherwise, leave the red channel alone
+    }
 
-void Beauty::removeRedEye(cv::Mat& dst, const cv::Mat& src, const std::vector<cv::Point2f>& polygon, float threshold/* = 0.5F */)
-{
-	assert(src.channels() >= 3 && src.depth() != CV_64F);
-	assert(0 <= threshold && threshold <= 1.0F);
+    void
+    Beauty::removeRedEye(cv::Mat &dst, const cv::Mat &src, const std::vector<cv::Point2f> &polygon,
+                         float threshold/* = 0.5F */) {
+        assert(src.channels() >= 3 && src.depth() != CV_64F);
+        assert(0 <= threshold && threshold <= 1.0F);
 
-	if(dst.data != src.data)
-		src.copyTo(dst);
+        if (dst.data != src.data)
+            src.copyTo(dst);
 
-	Point2i position;
-	const Mat mask = Feature::createMask(polygon, 0.0F, &position);
-	
-	Rect rect(position.x, position.y, mask.cols, mask.rows);
-	Mat roi = dst(rect).clone();
-	bool is_float_type = src.depth() == CV_32F;
-	if(!is_float_type)
-		roi.convertTo(roi, CV_32F, 1/255.0F);
+        Point2i position;
+        const Mat mask = Feature::createMask(polygon, 0.0F, &position);
 
-	float* roi_data = roi.ptr<float>();
-	const uint8_t* mask_data = roi.ptr<uint8_t>();
-	const int channel = roi.channels();
-	const int length = mask.rows * mask.cols;
+        Rect rect(position.x, position.y, mask.cols, mask.rows);
+        Mat roi = dst(rect).clone();
+        bool is_float_type = src.depth() == CV_32F;
+        if (!is_float_type)
+            roi.convertTo(roi, CV_32F, 1 / 255.0F);
 
-	#pragma omp parallel for
-	for(int i = 0; i < length; ++i)
-		if(mask_data[i] == 255)
-			redEyeReduction(roi_data + i * channel, threshold);
+        float *roi_data = roi.ptr<float>();
+        const uint8_t *mask_data = roi.ptr<uint8_t>();
+        const int channel = roi.channels();
+        const int length = mask.rows * mask.cols;
 
-	if(!is_float_type)
-		roi.convertTo(roi, src.depth(), 255.0F);
+#pragma omp parallel for
+        for (int i = 0; i < length; ++i)
+            if (mask_data[i] == 255)
+                redEyeReduction(roi_data + i * channel, threshold);
 
-	roi.copyTo(dst(rect));
-}
+        if (!is_float_type)
+            roi.convertTo(roi, src.depth(), 255.0F);
 
-void Beauty::whitenSkinByLogCurve(cv::Mat& dst, const cv::Mat& src, const cv::Mat& mask, float level)
-{
-	assert(src.channels() == 4);
-	assert(2 <= level && level <= 10);
+        roi.copyTo(dst(rect));
+    }
 
-	const int depth = src.depth();
-	const int channels = src.channels();
-	src.copyTo(dst);  // copy alpha channel if the source image has.
+    void Beauty::whitenSkinByLogCurve(cv::Mat &dst, const cv::Mat &src, const cv::Mat &mask,
+                                      float level) {
+        assert(src.channels() == 4);
+        assert(2 <= level && level <= 10);
 
-	if(depth == CV_8U)
-	{
-		// formular:  y = log(x*(amount - 1) + 1) / log(amount)
-		const float denorm = std::log(level) / 255.0F;
+        const int depth = src.depth();
+        const int channels = src.channels();
+        src.copyTo(dst);  // copy alpha channel if the source image has.
 
-		uint8_t table[256];
-		for(int i = 0; i < 256; ++i)
-			table[i] = static_cast<uint8_t>(log(i/255.0F *(level - 1) + 1) / denorm);
+        if (depth == CV_8U) {
+            // formular:  y = log(x*(amount - 1) + 1) / log(amount)
+            const float denorm = std::log(level) / 255.0F;
 
-		assert(mask.type() == CV_8UC1);
-		Effect::mapColor(dst, dst, mask.data, table);
-	}
-	else if(depth == CV_32F)
-	{
-		assert(mask.type() == CV_32FC1);
-		float* dst_data = dst.ptr<float>();
-		const float* mask_data = mask.ptr<float>();
-		const int length = src.rows * src.cols;
+            uint8_t table[256];
+            for (int i = 0; i < 256; ++i)
+                table[i] = static_cast<uint8_t>(log(i / 255.0F * (level - 1) + 1) / denorm);
 
-		// formular:  y = log(x*(amount - 1) + 1) / log(amount)
-		const float log_amount = std::log(level);
+            assert(mask.type() == CV_8UC1);
+            Effect::mapColor(dst, dst, mask.data, table);
+        } else if (depth == CV_32F) {
+            assert(mask.type() == CV_32FC1);
+            float *dst_data = dst.ptr<float>();
+            const float *mask_data = mask.ptr<float>();
+            const int length = src.rows * src.cols;
 
-		#pragma omp parallel for
-		for(int i = 0; i < length; ++i)
-		{
-			assert(0 <= mask_data[i] && mask_data[i] <= 1.0F);
-			const int index = i * channels;
-			for(int k = 0; k < 3; ++k)  // force compiler loop unrolling
-				dst_data[index + k] = lerp(dst_data[index + k], std::log(dst_data[index + k] * (level - 1) + 1) / log_amount, mask_data[i]);
-		}
-	}
-}
+            // formular:  y = log(x*(amount - 1) + 1) / log(amount)
+            const float log_amount = std::log(level);
+
+#pragma omp parallel for
+            for (int i = 0; i < length; ++i) {
+                assert(0 <= mask_data[i] && mask_data[i] <= 1.0F);
+                const int index = i * channels;
+                for (int k = 0; k < 3; ++k)  // force compiler loop unrolling
+                    dst_data[index + k] = lerp(dst_data[index + k],
+                                               std::log(dst_data[index + k] * (level - 1) + 1) /
+                                               log_amount, mask_data[i]);
+            }
+        }
+    }
 
 // Refer to paper "Digital Image Enhancement and Noise Filtering by Use of Local Statistics" by Jong-sen Lee, 1979
-void Beauty::beautifySkin(cv::Mat& dst, const cv::Mat& src, const cv::Mat& mask, float radius, float level)
-{
-	assert(src.rows == mask.rows && src.cols == mask.cols && mask.channels() == 1);
-	double max;
-	Mat _src  = venus::normalize(src, &max);
-	Mat _mask = venus::normalize(mask);
+    void Beauty::beautifySkin(cv::Mat &dst, const cv::Mat &src, const cv::Mat &mask, float radius,
+                              float level) {
+        assert(src.rows == mask.rows && src.cols == mask.cols && mask.channels() == 1);
+        double max;
+        Mat _src = venus::normalize(src, &max);
+        Mat _mask = venus::normalize(mask);
 
 //	level = 10 + level * level * 5;
-	int size = cvRound(radius) * 2 + 1;
+        int size = cvRound(radius) * 2 + 1;
 
-	// expectation: E[x] = (x1 + x2 + ... + xn)/n;  //x1*p1 + x2*p2 + ... + xn*pn;
-	// variance: Var(X) = E[(X - miu)^2] = E[X^2] - E[X]^2
-	Mat expectation, variance;
-	cv::blur(_src, expectation, Size(size, size), Point(-1, -1), BorderTypes::BORDER_CONSTANT);
+        // expectation: E[x] = (x1 + x2 + ... + xn)/n;  //x1*p1 + x2*p2 + ... + xn*pn;
+        // variance: Var(X) = E[(X - miu)^2] = E[X^2] - E[X]^2
+        Mat expectation, variance;
+        cv::blur(_src, expectation, Size(size, size), Point(-1, -1), BorderTypes::BORDER_CONSTANT);
 
-	dst = expectation - _src;
+        dst = expectation - _src;
 //	cv::multiply(dst, dst, dst);  // dst = dst .* dst;  // element-wise multiplication
-	float* const dst_data = dst.ptr<float>();
-	const int channel = src.channels();
-	const int length = src.rows * src.cols * channel;
+        float *const dst_data = dst.ptr<float>();
+        const int channel = src.channels();
+        const int length = src.rows * src.cols * channel;
 
-	#pragma omp parallel for
-	for(int i = 0; i < length; ++i)
-		dst_data[i] *= dst_data[i];
+#pragma omp parallel for
+        for (int i = 0; i < length; ++i)
+            dst_data[i] *= dst_data[i];
 
-	cv::blur(dst, variance, Size(size, size), Point(-1, -1), BorderTypes::BORDER_CONSTANT);
-	
-	const float* _src_data = _src.ptr<float>();
-	const float* _mask_data = _mask.ptr<float>();
-	const float* expectation_data = expectation.ptr<float>();
-	const float* variance_data = variance.ptr<float>();
+        cv::blur(dst, variance, Size(size, size), Point(-1, -1), BorderTypes::BORDER_CONSTANT);
 
-	#pragma omp parallel for
-	for(int i = 0; i < length; ++i)
-	{
-		float k = variance_data[i] / (variance_data[i] + level);
-		float interp = lerp(expectation_data[i], _src_data[i], k);
+        const float *_src_data = _src.ptr<float>();
+        const float *_mask_data = _mask.ptr<float>();
+        const float *expectation_data = expectation.ptr<float>();
+        const float *variance_data = variance.ptr<float>();
+
+#pragma omp parallel for
+        for (int i = 0; i < length; ++i) {
+            float k = variance_data[i] / (variance_data[i] + level);
+            float interp = lerp(expectation_data[i], _src_data[i], k);
 //		dst_data[i] = interp;
-		dst_data[i] = lerp(_src_data[i], interp, _mask_data[i/channel]);
-	}
+            dst_data[i] = lerp(_src_data[i], interp, _mask_data[i / channel]);
+        }
 
-	dst.convertTo(dst, src.depth(), max);  // keep dst and src the same type
-}
+        dst.convertTo(dst, src.depth(), max);  // keep dst and src the same type
+    }
 
 } /* namespace venus */

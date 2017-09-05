@@ -5,97 +5,83 @@ import android.os.Parcelable;
 import android.support.annotation.Nullable;
 
 
-public class AspectRatio implements Parcelable
-{
-	/**
-	 * Use source image aspect ratio as default.
-	 */
-	public static final int DEFAULT_ASPECT_RATIO = 0;
-	
-	@Nullable
-	private String mAspectRatioTitle;
-	private int mAspectRatioX;
-	private int mAspectRatioY;
+public class AspectRatio implements Parcelable {
+    /**
+     * Use source image aspect ratio as default.
+     */
+    public static final int DEFAULT_ASPECT_RATIO = 0;
 
-	public AspectRatio(@Nullable String aspectRatioTitle, int aspectRatioX, int aspectRatioY)
-	{
-		mAspectRatioTitle = aspectRatioTitle;
-		mAspectRatioX = aspectRatioX;
-		mAspectRatioY = aspectRatioY;
-	}
+    @Nullable
+    private String mAspectRatioTitle;
+    private int mAspectRatioX;
+    private int mAspectRatioY;
 
-	protected AspectRatio(Parcel in)
-	{
-		mAspectRatioTitle = in.readString();
-		mAspectRatioX = in.readInt();
-		mAspectRatioY = in.readInt();
-	}
+    public AspectRatio(@Nullable String aspectRatioTitle, int aspectRatioX, int aspectRatioY) {
+        mAspectRatioTitle = aspectRatioTitle;
+        mAspectRatioX = aspectRatioX;
+        mAspectRatioY = aspectRatioY;
+    }
 
-	@Override
-	public void writeToParcel(Parcel dest, int flags)
-	{
-		dest.writeString(mAspectRatioTitle);
-		dest.writeInt(mAspectRatioX);
-		dest.writeInt(mAspectRatioY);
-	}
+    protected AspectRatio(Parcel in) {
+        mAspectRatioTitle = in.readString();
+        mAspectRatioX = in.readInt();
+        mAspectRatioY = in.readInt();
+    }
 
-	@Override
-	public int describeContents()
-	{
-		return 0;
-	}
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mAspectRatioTitle);
+        dest.writeInt(mAspectRatioX);
+        dest.writeInt(mAspectRatioY);
+    }
 
-	public static final Creator<AspectRatio> CREATOR = new Creator<AspectRatio>()
-	{
-		@Override
-		public AspectRatio createFromParcel(Parcel in)
-		{
-			return new AspectRatio(in);
-		}
+    @Override
+    public int describeContents() {
+        return 0;
+    }
 
-		@Override
-		public AspectRatio[] newArray(int size)
-		{
-			return new AspectRatio[size];
-		}
-	};
+    public static final Creator<AspectRatio> CREATOR = new Creator<AspectRatio>() {
+        @Override
+        public AspectRatio createFromParcel(Parcel in) {
+            return new AspectRatio(in);
+        }
 
-	public void setmAspectRatioTitle(String title)
-	{
-		mAspectRatioTitle = title;
-	}
-	
-	@Nullable
-	public String getAspectRatioTitle()
-	{
-		return mAspectRatioTitle;
-	}
+        @Override
+        public AspectRatio[] newArray(int size) {
+            return new AspectRatio[size];
+        }
+    };
 
-	public int getAspectRatioX()
-	{
-		return mAspectRatioX;
-	}
+    public void setmAspectRatioTitle(String title) {
+        mAspectRatioTitle = title;
+    }
 
-	public int getAspectRatioY()
-	{
-		return mAspectRatioY;
-	}
+    @Nullable
+    public String getAspectRatioTitle() {
+        return mAspectRatioTitle;
+    }
 
-	public float getAspectRatio()
-	{
-		if(mAspectRatioX == DEFAULT_ASPECT_RATIO || mAspectRatioY == DEFAULT_ASPECT_RATIO)
-			return DEFAULT_ASPECT_RATIO;
-		else
-			return mAspectRatioX / mAspectRatioY;
-	}
-	
-	public synchronized void switchOrientation()
-	{
-		if(mAspectRatioX == DEFAULT_ASPECT_RATIO || mAspectRatioY == DEFAULT_ASPECT_RATIO)
-			return;
-		
-		int tmp = mAspectRatioX;
-		mAspectRatioX = mAspectRatioY;
-		mAspectRatioY = tmp;
-	}
+    public int getAspectRatioX() {
+        return mAspectRatioX;
+    }
+
+    public int getAspectRatioY() {
+        return mAspectRatioY;
+    }
+
+    public float getAspectRatio() {
+        if (mAspectRatioX == DEFAULT_ASPECT_RATIO || mAspectRatioY == DEFAULT_ASPECT_RATIO)
+            return DEFAULT_ASPECT_RATIO;
+        else
+            return mAspectRatioX / mAspectRatioY;
+    }
+
+    public synchronized void switchOrientation() {
+        if (mAspectRatioX == DEFAULT_ASPECT_RATIO || mAspectRatioY == DEFAULT_ASPECT_RATIO)
+            return;
+
+        int tmp = mAspectRatioX;
+        mAspectRatioX = mAspectRatioY;
+        mAspectRatioY = tmp;
+    }
 }

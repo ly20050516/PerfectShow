@@ -8,6 +8,19 @@
 
 package com.cloudream.ishow.gpuimage;
 
+import android.graphics.Bitmap;
+import android.opengl.GLSurfaceView;
+import android.util.Log;
+
+import java.nio.IntBuffer;
+
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.egl.EGLContext;
+import javax.microedition.khronos.egl.EGLDisplay;
+import javax.microedition.khronos.egl.EGLSurface;
+import javax.microedition.khronos.opengles.GL10;
+
 import static javax.microedition.khronos.egl.EGL10.EGL_ALPHA_SIZE;
 import static javax.microedition.khronos.egl.EGL10.EGL_BLUE_SIZE;
 import static javax.microedition.khronos.egl.EGL10.EGL_DEFAULT_DISPLAY;
@@ -22,193 +35,164 @@ import static javax.microedition.khronos.egl.EGL10.EGL_WIDTH;
 import static javax.microedition.khronos.opengles.GL10.GL_RGBA;
 import static javax.microedition.khronos.opengles.GL10.GL_UNSIGNED_BYTE;
 
-import java.nio.IntBuffer;
+public class PixelBuffer {
+    private static final String TAG = PixelBuffer.class.getSimpleName();
+    final static boolean LIST_CONFIGS = false;
 
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLDisplay;
-import javax.microedition.khronos.egl.EGLSurface;
-import javax.microedition.khronos.opengles.GL10;
+    GLSurfaceView.Renderer mRenderer; // borrow this interface
+    int mWidth, mHeight;
+    Bitmap mBitmap;
 
-import android.graphics.Bitmap;
-import android.opengl.GLSurfaceView;
-import android.util.Log;
+    EGL10 mEGL;
+    EGLDisplay mEGLDisplay;
+    EGLConfig[] mEGLConfigs;
+    EGLConfig mEGLConfig;
+    EGLContext mEGLContext;
+    EGLSurface mEGLSurface;
+    GL10 mGL;
 
-public class PixelBuffer
-{
-	private static final String TAG = PixelBuffer.class.getSimpleName();
-	final static boolean LIST_CONFIGS = false;
+    String mThreadOwner;
 
-	GLSurfaceView.Renderer mRenderer; // borrow this interface
-	int mWidth, mHeight;
-	Bitmap mBitmap;
+    public PixelBuffer(final int width, final int height) {
+        mWidth = width;
+        mHeight = height;
 
-	EGL10 mEGL;
-	EGLDisplay mEGLDisplay;
-	EGLConfig[] mEGLConfigs;
-	EGLConfig mEGLConfig;
-	EGLContext mEGLContext;
-	EGLSurface mEGLSurface;
-	GL10 mGL;
+        int[] version = new int[2];
+        int[] attribList = new int[]{EGL_WIDTH, mWidth, EGL_HEIGHT, mHeight, EGL_NONE};
 
-	String mThreadOwner;
+        // No error checking performed, minimum required code to elucidate logic
+        mEGL = (EGL10) EGLContext.getEGL();
+        mEGLDisplay = mEGL.eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        mEGL.eglInitialize(mEGLDisplay, version);
+        mEGLConfig = chooseConfig(); // Choosing a config is a little more complicated
 
-	public PixelBuffer(final int width, final int height)
-	{
-		mWidth = width;
-		mHeight = height;
+        // mEGLContext = mEGL.eglCreateContext(mEGLDisplay, mEGLConfig,
+        // EGL_NO_CONTEXT, null);
+        int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+        int[] attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE};
+        mEGLContext = mEGL.eglCreateContext(mEGLDisplay, mEGLConfig, EGL_NO_CONTEXT, attrib_list);
 
-		int[] version = new int[2];
-		int[] attribList = new int[]{ EGL_WIDTH, mWidth, EGL_HEIGHT, mHeight, EGL_NONE };
+        mEGLSurface = mEGL.eglCreatePbufferSurface(mEGLDisplay, mEGLConfig, attribList);
+        mEGL.eglMakeCurrent(mEGLDisplay, mEGLSurface, mEGLSurface, mEGLContext);
 
-		// No error checking performed, minimum required code to elucidate logic
-		mEGL = (EGL10) EGLContext.getEGL();
-		mEGLDisplay = mEGL.eglGetDisplay(EGL_DEFAULT_DISPLAY);
-		mEGL.eglInitialize(mEGLDisplay, version);
-		mEGLConfig = chooseConfig(); // Choosing a config is a little more complicated
+        mGL = (GL10) mEGLContext.getGL();
 
-		// mEGLContext = mEGL.eglCreateContext(mEGLDisplay, mEGLConfig,
-		// EGL_NO_CONTEXT, null);
-		int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
-		int[] attrib_list = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE };
-		mEGLContext = mEGL.eglCreateContext(mEGLDisplay, mEGLConfig, EGL_NO_CONTEXT, attrib_list);
+        // Record thread owner of OpenGL context
+        mThreadOwner = Thread.currentThread().getName();
+    }
 
-		mEGLSurface = mEGL.eglCreatePbufferSurface(mEGLDisplay, mEGLConfig, attribList);
-		mEGL.eglMakeCurrent(mEGLDisplay, mEGLSurface, mEGLSurface, mEGLContext);
+    public void setRenderer(final GLSurfaceView.Renderer renderer) {
+        mRenderer = renderer;
 
-		mGL = (GL10) mEGLContext.getGL();
+        // Does this thread own the OpenGL context?
+        if (!Thread.currentThread().getName().equals(mThreadOwner)) {
+            Log.e(TAG, "setRenderer: This thread does not own the OpenGL context.");
+            return;
+        }
 
-		// Record thread owner of OpenGL context
-		mThreadOwner = Thread.currentThread().getName();
-	}
+        // Call the renderer initialization routines
+        mRenderer.onSurfaceCreated(mGL, mEGLConfig);
+        mRenderer.onSurfaceChanged(mGL, mWidth, mHeight);
+    }
 
-	public void setRenderer(final GLSurfaceView.Renderer renderer)
-	{
-		mRenderer = renderer;
+    public Bitmap getBitmap() {
+        // Do we have a renderer?
+        if (mRenderer == null) {
+            Log.e(TAG, "getBitmap: Renderer was not set.");
+            return null;
+        }
 
-		// Does this thread own the OpenGL context?
-		if(!Thread.currentThread().getName().equals(mThreadOwner))
-		{
-			Log.e(TAG, "setRenderer: This thread does not own the OpenGL context.");
-			return;
-		}
+        // Does this thread own the OpenGL context?
+        if (!Thread.currentThread().getName().equals(mThreadOwner)) {
+            Log.e(TAG, "getBitmap: This thread does not own the OpenGL context.");
+            return null;
+        }
 
-		// Call the renderer initialization routines
-		mRenderer.onSurfaceCreated(mGL, mEGLConfig);
-		mRenderer.onSurfaceChanged(mGL, mWidth, mHeight);
-	}
+        // Call the renderer draw routine (it seems that some filters do not
+        // work if this is only called once)
+        mRenderer.onDrawFrame(mGL);
+        mRenderer.onDrawFrame(mGL);
+        convertToBitmap();
+        return mBitmap;
+    }
 
-	public Bitmap getBitmap()
-	{
-		// Do we have a renderer?
-		if(mRenderer == null)
-		{
-			Log.e(TAG, "getBitmap: Renderer was not set.");
-			return null;
-		}
+    public void destroy() {
+        mRenderer.onDrawFrame(mGL);
+        mRenderer.onDrawFrame(mGL);
+        mEGL.eglMakeCurrent(mEGLDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
 
-		// Does this thread own the OpenGL context?
-		if(!Thread.currentThread().getName().equals(mThreadOwner))
-		{
-			Log.e(TAG, "getBitmap: This thread does not own the OpenGL context.");
-			return null;
-		}
+        mEGL.eglDestroySurface(mEGLDisplay, mEGLSurface);
+        mEGL.eglDestroyContext(mEGLDisplay, mEGLContext);
+        mEGL.eglTerminate(mEGLDisplay);
+    }
 
-		// Call the renderer draw routine (it seems that some filters do not
-		// work if this is only called once)
-		mRenderer.onDrawFrame(mGL);
-		mRenderer.onDrawFrame(mGL);
-		convertToBitmap();
-		return mBitmap;
-	}
+    private EGLConfig chooseConfig() {
+        int[] attribList = new int[]
+                {
+                        EGL_DEPTH_SIZE, 0,
+                        EGL_STENCIL_SIZE, 0,
+                        EGL_RED_SIZE, 8,
+                        EGL_GREEN_SIZE, 8,
+                        EGL_BLUE_SIZE, 8,
+                        EGL_ALPHA_SIZE, 8,
+                        EGL10.EGL_RENDERABLE_TYPE, 4,
+                        EGL_NONE
+                };
 
-	public void destroy()
-	{
-		mRenderer.onDrawFrame(mGL);
-		mRenderer.onDrawFrame(mGL);
-		mEGL.eglMakeCurrent(mEGLDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
+        // No error checking performed, minimum required code to elucidate logic
+        // Expand on this logic to be more selective in choosing a configuration
+        int[] numConfig = new int[1];
+        mEGL.eglChooseConfig(mEGLDisplay, attribList, null, 0, numConfig);
+        int configSize = numConfig[0];
+        mEGLConfigs = new EGLConfig[configSize];
+        mEGL.eglChooseConfig(mEGLDisplay, attribList, mEGLConfigs, configSize, numConfig);
 
-		mEGL.eglDestroySurface(mEGLDisplay, mEGLSurface);
-		mEGL.eglDestroyContext(mEGLDisplay, mEGLContext);
-		mEGL.eglTerminate(mEGLDisplay);
-	}
+        if (LIST_CONFIGS) {
+            listConfig();
+        }
 
-	private EGLConfig chooseConfig()
-	{
-		int[] attribList = new int[]
-		{
-				EGL_DEPTH_SIZE, 0,
-				EGL_STENCIL_SIZE, 0,
-				EGL_RED_SIZE, 8,
-				EGL_GREEN_SIZE, 8,
-				EGL_BLUE_SIZE, 8,
-				EGL_ALPHA_SIZE, 8,
-				EGL10.EGL_RENDERABLE_TYPE, 4,
-				EGL_NONE
-		};
+        return mEGLConfigs[0]; // Best match is probably the first configuration
+    }
 
-		// No error checking performed, minimum required code to elucidate logic
-		// Expand on this logic to be more selective in choosing a configuration
-		int[] numConfig = new int[1];
-		mEGL.eglChooseConfig(mEGLDisplay, attribList, null, 0, numConfig);
-		int configSize = numConfig[0];
-		mEGLConfigs = new EGLConfig[configSize];
-		mEGL.eglChooseConfig(mEGLDisplay, attribList, mEGLConfigs, configSize, numConfig);
+    private void listConfig() {
+        Log.i(TAG, "Config List {");
 
-		if(LIST_CONFIGS)
-		{
-			listConfig();
-		}
+        for (EGLConfig config : mEGLConfigs) {
+            int d, s, r, g, b, a;
 
-		return mEGLConfigs[0]; // Best match is probably the first configuration
-	}
+            // Expand on this logic to dump other attributes
+            d = getConfigAttrib(config, EGL_DEPTH_SIZE);
+            s = getConfigAttrib(config, EGL_STENCIL_SIZE);
+            r = getConfigAttrib(config, EGL_RED_SIZE);
+            g = getConfigAttrib(config, EGL_GREEN_SIZE);
+            b = getConfigAttrib(config, EGL_BLUE_SIZE);
+            a = getConfigAttrib(config, EGL_ALPHA_SIZE);
+            Log.i(TAG, "<d,s,r,g,b,a> = <" + d + "," + s + "," + r + "," + g + "," + b + "," + a + ">");
+        }
 
-	private void listConfig()
-	{
-		Log.i(TAG, "Config List {");
+        Log.i(TAG, "}");
+    }
 
-		for(EGLConfig config : mEGLConfigs)
-		{
-			int d, s, r, g, b, a;
+    private int getConfigAttrib(final EGLConfig config, final int attribute) {
+        int[] value = new int[1];
+        return mEGL.eglGetConfigAttrib(mEGLDisplay, config, attribute, value) ? value[0] : 0;
+    }
 
-			// Expand on this logic to dump other attributes
-			d = getConfigAttrib(config, EGL_DEPTH_SIZE);
-			s = getConfigAttrib(config, EGL_STENCIL_SIZE);
-			r = getConfigAttrib(config, EGL_RED_SIZE);
-			g = getConfigAttrib(config, EGL_GREEN_SIZE);
-			b = getConfigAttrib(config, EGL_BLUE_SIZE);
-			a = getConfigAttrib(config, EGL_ALPHA_SIZE);
-			Log.i(TAG, "<d,s,r,g,b,a> = <" + d + "," + s + "," + r + "," + g + "," + b + "," + a + ">");
-		}
+    private void convertToBitmap() {
+        int[] iat = new int[mWidth * mHeight];
+        IntBuffer ib = IntBuffer.allocate(mWidth * mHeight);
+        mGL.glReadPixels(0, 0, mWidth, mHeight, GL_RGBA, GL_UNSIGNED_BYTE, ib);
+        int[] ia = ib.array();
 
-		Log.i(TAG, "}");
-	}
+        // Stupid !
+        // Convert upside down mirror-reversed image to right-side up normal image.
+        for (int i = 0; i < mHeight; i++) {
+            for (int j = 0; j < mWidth; j++) {
+                iat[(mHeight - i - 1) * mWidth + j] = ia[i * mWidth + j];
+            }
+        }
 
-	private int getConfigAttrib(final EGLConfig config, final int attribute)
-	{
-		int[] value = new int[1];
-		return mEGL.eglGetConfigAttrib(mEGLDisplay, config, attribute, value) ? value[0] : 0;
-	}
-
-	private void convertToBitmap()
-	{
-		int[] iat = new int[mWidth * mHeight];
-		IntBuffer ib = IntBuffer.allocate(mWidth * mHeight);
-		mGL.glReadPixels(0, 0, mWidth, mHeight, GL_RGBA, GL_UNSIGNED_BYTE, ib);
-		int[] ia = ib.array();
-
-		// Stupid !
-		// Convert upside down mirror-reversed image to right-side up normal image.
-		for(int i = 0; i < mHeight; i++)
-		{
-			for(int j = 0; j < mWidth; j++)
-			{
-				iat[(mHeight - i - 1) * mWidth + j] = ia[i * mWidth + j];
-			}
-		}
-
-		mBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888);
-		mBitmap.copyPixelsFromBuffer(IntBuffer.wrap(iat));
-	}
+        mBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888);
+        mBitmap.copyPixelsFromBuffer(IntBuffer.wrap(iat));
+    }
 }
