@@ -8,7 +8,7 @@ OPENCV_INSTALL_MODULES  := off
 OPENCV_LIB_TYPE         := STATIC
 
 # change the paths below to meet your own project
-OPENCV_ANDROID_SDK_HOME := F:/OpenCV/OpenCV-3.2.0-android-sdk
+OPENCV_ANDROID_SDK_HOME := /Users/ly/Library/OpenCV-3.2.0-android-sdk
 
 include $(OPENCV_ANDROID_SDK_HOME)/sdk/native/jni/OpenCV.mk
 OPENCV_INCLUDE_DIR        := $(OPENCV_ANDROID_SDK_HOME)/sdk/native/jni/include
